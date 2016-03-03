@@ -1,20 +1,19 @@
 // Define the LED digit patterns, from 0 to 9    
-// Updated 2/28/2016
+// Updated 3/1/2016
 // Created by: Nathaniel Deal
+// Contributing Authors: SearingPhoenix
 //
 // Define the LED digit patterns, from 0 to 9
 // Note that these patterns are for common anode displays
 // 0 = LED on, 1 = LED off:
 
-int countSet = 18; // Set initial count
-int displayCount = countSet;  // Store Intial count
-int toggleArray[] = {6,12,18,25,35}; // Setup array of clip sizes
+int toggleArray[] = {35,25,18,12,6}; // Setup array of magazine sizes
+int toggleCount = (sizeof(toggleArray)/sizeof(int))-1; // Find size of array, subtract 1 for indexing.
+int togglePosition = toggleCount; //Start at max capacity.
+int displayCount = toggleArray[toggleCount];  // Set intial count to highest capacity.
 
-int firstDigit;
-int secondDigit;
-boolean toggleState;
-boolean resetState; 
-boolean counterState; 
+int firstDigit, secondDigit;
+boolean toggleState, resetState, counterState; 
 
 // IR Beam Setup
 const int analogInPin = A2;  // Analog input pin that the ir reciever is attached to
@@ -81,9 +80,15 @@ void loop(){
   
     // If barrel is clear and beam is broken then countdown
     if (hasCleared == true && outputValue >= 100) {  // This value can be changed depending on dart speed  
-      changeNumber(--displayCount); 
+
+      if (displayCount == 0) {
+        displayCount = toggleArray[toggleCount]; //Reset to max.
+      } else {
+       --displayCount; //Deincrement capacity one step
+      }
+
+      changeNumber(displayCount); 
       hasCleared = !hasCleared;
-      //delay(2);
     }
   
     // Print the results to the serial monitor for testing
@@ -95,45 +100,39 @@ void loop(){
   
   // Monitor Counter Button
   //----------------------------------------------------//
-  /*
+  
     counterState = digitalRead(counterPin);
 
-    // Check if the pushbutton is pressed.
-    if (counterState == HIGH) {       
-      changeNumber(--displayCount);  
-    }
-  */
+    // Check if the counterbutton is pressed.
+    /*if (counterState == HIGH) {  
+   
+      if (displayCount == 0) {
+        displayCount = toggleArray[toggleCount]; //Reset to max.
+      } else {
+       --displayCount; //Deincrement capacity one step
+      }
+
+      changeNumber(displayCount); //Send to display
+      delay(250); // Debounce button
+    }*/
   
   // Monitor Toggle Button
   //----------------------------------------------------//
  
     toggleState = digitalRead(togglePin);
-  
+
     // Check if the togglebutton is pressed.
     if (toggleState == HIGH) {       
         
-      if (countSet == toggleArray[4]) {
-        countSet = toggleArray[0];
-      }
-      
-      else if (countSet == toggleArray[3]) {
-        countSet = toggleArray[4];
-      }
-      
-      else if (countSet == toggleArray[2]) {
-        countSet = toggleArray[3];
-      }
-      
-      else if (countSet == toggleArray[1]) {
-        countSet = toggleArray[2];
-      }
-      
-      else if (countSet == toggleArray[0]) {
-        countSet = toggleArray[1];
+      //Check for array underrun
+      if (togglePosition == 0) {
+        togglePosition = toggleCount; //Reset to max.
+      } else {
+      togglePosition--; //Deincrement capacity one step 
       }
 
-      displayCount = countSet;
-      changeNumber(displayCount);
+      displayCount = toggleArray[togglePosition]; //Set count to selected ammo capacity.
+      changeNumber(displayCount); //Send to display
       delay(250); // Debounce button
     }
   
@@ -145,7 +144,7 @@ void loop(){
   
     // Check if resetbutton is pressed.
     if (resetState == HIGH) {  
-      displayCount = countSet;    
+      displayCount = toggleArray[togglePosition]; //Set display to selected ammo capacity.   
       changeNumber(displayCount);
       delay(250); // Debounce button
     }
@@ -496,5 +495,3 @@ void writeRegisters(){
 void setRegisterPin(int index, int value){
   registers[index] = value;
 }
-
-
