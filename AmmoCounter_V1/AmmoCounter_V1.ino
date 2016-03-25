@@ -1,5 +1,5 @@
 // AmmoCounter V1 - www.ammocounter.com   
-// Updated 3/18/2016
+// Updated 3/23/2016
 // Created by: Nathaniel Deal
 //
 // Define the LED digit patterns, from 0 to 9
@@ -7,7 +7,8 @@
 // 0 = LED on, 1 = LED off:
 
 // Include Libraries
-#include <Button.h>
+#include <Button.h> // Library for buttons
+#include <Timer.h> // Library for sleep timer
 
 // Setup Counter Variables
 int toggleArray[] = {35,25,18,12,6}; // Setup array of magazine sizes
@@ -15,6 +16,10 @@ int toggleCount = (sizeof(toggleArray)/sizeof(int))-1; // Find size of array
 int togglePosition = toggleCount; //Start at max capacity.
 int displayCount = toggleArray[toggleCount];  // Set intial count to highest capacity.
 int firstDigit, secondDigit;
+
+// Sleep Timer variables
+Timer t;
+int sleepEvent;
 
 // IR Beam Setup
 const int analogInPin = A2;  // Analog input pin that the ir reciever is attached to
@@ -50,6 +55,9 @@ void setup() {
   
   // Show Initial Count
   changeNumber(displayCount);
+
+  // Turn display off when not in use
+  int sleepTimer = t.after(10000, hideDisplay); 
   
 }               
 
@@ -150,6 +158,8 @@ void changeNumber(int displayCount) {
     
     // TODO: add double zero blink and buzzer function
   }
+
+  t.update(); // Counter for sleep timer
   
   //delay(250); // May be needed to debounce button
 }
@@ -455,4 +465,8 @@ void setRegisterPin(int index, int value){
   registers[index] = value;
 }
 
+void hideDisplay()
+{
+  clearRegisters();
+}
 
